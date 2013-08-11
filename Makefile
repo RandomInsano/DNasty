@@ -1,14 +1,16 @@
 CC=gcc
-OBJECTS=main.o
+OBJECTS=main.o utilities.o
 OUTPUT=main
+CFLAGS=-wall -g
 
 default: $(OUTPUT)
 
-%.o: %.c $(HEADERS)
-	$(CC) -c $< -o $@
+%.o : %.c
+	$(CC) -c $(CFLAGS) $< -o $@
 
 $(OUTPUT): $(OBJECTS)
-	$(CC) -o main $(OBJECTS)
+	$(CC) -o $(OUTPUT) $(OBJECTS)
 
+.PHONY: clean $(OUTPUT)
 clean:
 	-rm -f $(OBJECTS) $(OUTPUT)

@@ -1,3 +1,9 @@
+#ifndef __main_h
+#define __main_h
+
+#define SOCK_BUFLEN 512 /* Max UDP size anyway */
+#define SOCK_PORT    53
+
 #define DNS_MSGFLAG_QR       0x8000 /* 10000000 00000000 */
 #define DNS_MSGFLAG_OPCODE   0x7800 /* 01111000 00000000 */
 #define DNS_MSGFLAG_AA       0x0400 /* 00000100 00000000 */
@@ -104,3 +110,5 @@ struct answer {
 
 
 #pragma pop
+
+#endif
