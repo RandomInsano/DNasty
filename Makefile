@@ -7,7 +7,7 @@ default: $(OUTPUT)
 %.o: %.c $(HEADERS)
 	$(CC) -c $< -o $@
 
-main: $(OBJECTS)
+$(OUTPUT): $(OBJECTS)
 	$(CC) -o main $(OBJECTS)
 
 clean:
