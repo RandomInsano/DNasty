@@ -1,16 +1,18 @@
-#define DNS_MSGFLAG_QR =     0x8000; // 10000000 00000000
-#define DNS_MSGFLAG_OPCODE = 0x7800; // 01111000 00000000
-#define DNS_MSGFLAG_AA =     0x0400; // 00000100 00000000
-#define DNS_MSGFLAG_TF =     0x0200; // 00000010 00000000
-#define DNS_MSGFLAG_RD =     0x0100; // 00000001 00000000
-#define DNS_MSGFLAG_RA =     0x0080; // 00000000 10000000
-#define DNS_MSGFLAG_AD =     0x0020; // 00000000 00100000
-#define DNS_MSGFLAG_CD =     0x0010; // 00000000 00010000
-#define DNS_MSGFLAG_Z =	     0x0070; // 00000000 01110000
-#define DNS_MSGFLAG_RCODE =  0x000F; // 00000000 00001111
+#define DNS_MSGFLAG_QR       0x8000 /* 10000000 00000000 */
+#define DNS_MSGFLAG_OPCODE   0x7800 /* 01111000 00000000 */
+#define DNS_MSGFLAG_AA       0x0400 /* 00000100 00000000 */
+#define DNS_MSGFLAG_TF       0x0200 /* 00000010 00000000 */
+#define DNS_MSGFLAG_RD       0x0100 /* 00000001 00000000 */
+#define DNS_MSGFLAG_RA       0x0080 /* 00000000 10000000 */
+#define DNS_MSGFLAG_AD       0x0020 /* 00000000 00100000 */
+#define DNS_MSGFLAG_CD       0x0010 /* 00000000 00010000 */
+#define DNS_MSGFLAG_Z  	     0x0070 /* 00000000 01110000 */
+#define DNS_MSGFLAG_RCODE    0x000F /* 00000000 00001111 */
 
 // Handy pre-built flaggies
-#define DNS_MSGFLAG_RESP =	DNS_MSGFLAG_QR /* I refuse fragments for now! */
+#define DNS_MSGFLAG_RESP     DNS_MSGFLAG_QR /* I refuse fragments for now! */
+
+#define DNS_ANSFLAG_COPY     0x0CC0
 
 enum opcode {
 	Reserved0,
@@ -55,6 +57,18 @@ enum rcode {
 	NotZone
 };
 
+enum acode {
+	A     = 1,
+	NS    = 2,
+	CNAME = 5,
+	SOA   = 6,
+	WKS   = 11,
+	PTR   = 12,
+	MX    = 15,
+	SRV   = 33,
+	A6    = 38
+};
+
 #pragma push
 #pragma pack(1)
 
@@ -79,5 +93,14 @@ struct question {
 	unsigned short type;
 	unsigned short class;
 } question;
+
+struct answer {
+	unsigned short name;
+	unsigned short type;
+	unsigned short class;
+	unsigned int ttl;
+	unsigned short rdlen;
+};
+
 
 #pragma pop

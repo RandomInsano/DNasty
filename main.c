@@ -42,11 +42,49 @@ void parse_stuff(char* payload)
 
 	printf("Query Infos:\n");
 	printf("- ID:    %u\n", m.msg.id);
-	printf("- Q#:    %u\n", htons(m.msg.question_count));
-	printf("- A1#:   %u\n", htons(m.msg.answer_count));
-	printf("- A2#:   %u\n", htons(m.msg.additional_count));
+	printf("- Q#:    %u\n", ntohs(m.msg.question_count));
+	printf("- A1#:   %u\n", ntohs(m.msg.answer_count));
+	printf("- A2#:   %u\n", ntohs(m.msg.additional_count));
 
-	hexdump(payload, sizeof(m.data));
+	hexdump(payload, 128);
+
+
+	////////////////////////////////////////////////////
+	// Modify and make an answer by hand for now...
+	// *** This is SUPER brittle! ***
+	////////////////////////////////////////////////////
+
+	m.msg.flags |= htons(DNS_MSGFLAG_QR|DNS_MSGFLAG_RD|DNS_MSGFLAG_RA);
+	m.msg.answer_count = htons(1);
+	memcpy(payload, m.data, sizeof(m.data));
+
+	// Scan for the end of the question resource. Assume one for now...
+	char* p;
+	p = payload;
+	p += sizeof(m.data);             // Skip over main header
+	p += 1;                          // Skip over question start flag
+	p += strlen(p);                  // Skip over its hostname
+	p += 4;                          // Skip over its class and type definitions
+
+	uint32_t ttl = 0;
+	struct answer answer;
+	answer.type  = htons(A);         // A Record response
+	answer.class = htons(Internet);  // Pretty much the only one going
+	answer.rdlen = htons(4);         // Length of IP address
+	answer.ttl   = htons(ttl);       // Five minutes
+	answer.name  = DNS_ANSFLAG_COPY; // Use the name from the request
+
+	// Copy answer into buffer
+	memcpy(p, &answer, sizeof(answer));
+
+	p += sizeof(answer);
+	p[0] = 200;
+	p[1] = 236;
+	p[2] = 31;
+	p[3] = 11;
+
+	printf("Modified: \n");
+	hexdump(payload, 39+5);
 }
 
 int main()
@@ -92,14 +130,13 @@ int main()
 		// is just bootstrapping. Stupid C and it's simplicity >:(
 		parse_stuff(buffer);
 
-		/*
-		retcode = sendto(s, buffer, SOCK_BUFLEN, 0, (struct sockaddr *)&si_remote,
+		// Fix the number of bytes its sending
+		retcode = sendto(s, buffer, 39, 0, (struct sockaddr *)&si_remote,
 				s_len);
 		if (retcode == -1)
 		{
 			die(4, "Echo back failed.");
 		}
-		*/
 	}
 
 	printf("I'm done.\n");
