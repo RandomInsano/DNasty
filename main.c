@@ -1,39 +1,11 @@
-#include "main.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#define SOCK_BUFLEN 512 /* Max UDP size anyway */
-#define SOCK_PORT    53
-
-void die(int code, const char* message)
-{
-	perror(message);
-	printf("\n");
-	exit(code);
-}
-
-#include <ctype.h>
-#include <stdio.h>
-void hexdump(void *ptr, int buflen) {
-  unsigned char *buf = (unsigned char*)ptr;
-  int i, j;
-  for (i=0; i<buflen; i+=16) {
-    printf("%06x: ", i);
-    for (j=0; j<16; j++)
-      if (i+j < buflen)
-        printf("%02x ", buf[i+j]);
-      else
-        printf("   ");
-    printf(" ");
-    for (j=0; j<16; j++)
-      if (i+j < buflen)
-        printf("%c", isprint(buf[i+j]) ? buf[i+j] : '.');
-    printf("\n");
-  }
-}
+#include "utilities.h"
+#include "main.h"
 
 void parse_stuff(char* payload)
 {
