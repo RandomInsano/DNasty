@@ -75,8 +75,7 @@ enum acode {
 	A6    = 38
 };
 
-#pragma push
-#pragma pack(1)
+#pragma pack(push, 1)
 
 struct message {
 	// DNS Header stuff
@@ -86,7 +85,7 @@ struct message {
 	unsigned short answer_count;	// Number of answers "
 	unsigned short auth_count;		// Number of authority records "
 	unsigned short additional_count;// Number of random crap records "
-} message;
+};
 
 union msg_array
 {
@@ -98,7 +97,7 @@ struct question {
 	unsigned char * message;
 	unsigned short type;
 	unsigned short class;
-} question;
+};
 
 struct answer {
 	unsigned short name;
@@ -108,7 +107,11 @@ struct answer {
 	unsigned short rdlen;
 };
 
+#pragma pack(pop)
 
-#pragma pop
+// Function definitions
+void parse_stuff(char*);
+
+
 
 #endif

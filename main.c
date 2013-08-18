@@ -43,17 +43,17 @@ void parse_stuff(char* payload)
 	answer.type  = htons(A);         // A Record response
 	answer.class = htons(Internet);  // Pretty much the only one going
 	answer.rdlen = htons(4);         // Length of IP address
-	answer.ttl   = htons(ttl);       // Five minutes
+	answer.ttl   = htonl(ttl);       // Five minutes
 	answer.name  = DNS_ANSFLAG_COPY; // Use the name from the request
 
 	// Copy answer into buffer
 	memcpy(p, &answer, sizeof(answer));
 
 	p += sizeof(answer);
-	p[0] = 200;
-	p[1] = 236;
-	p[2] = 31;
-	p[3] = 11;
+	p[0] = (char)200;
+	p[1] = (char)236;
+	p[2] = (char)31;
+	p[3] = (char)11;
 
 	printf("Modified: \n");
 	hexdump(payload, 39+5);
@@ -66,7 +66,8 @@ int main()
 	char buffer[SOCK_BUFLEN];
 	int s;
 	socklen_t s_len;
-	int retcode;
+	ssize_t retcode;
+	char* interface = "lo";
 	struct sockaddr_in si_local, si_remote;
 
 	s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -78,11 +79,16 @@ int main()
 	si_local = (const struct sockaddr_in){0};
 	si_local.sin_family = AF_INET;
 	si_local.sin_port = htons(SOCK_PORT);
-	si_local.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	// Set inteface to bind to
+	if (setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, interface, (socklen_t)strlen(interface)) == -1)
+	{
+		die (2, "Failed to select loopback interface for binding");
+	}
 
 	if (bind(s, (struct sockaddr *)&si_local, sizeof(si_local)) == -1)
 	{
-		die(2, "Binding failed...");
+		die(3, "Binding failed...");
 	}
 
 	printf("Listening...\n");
@@ -95,7 +101,7 @@ int main()
 				(struct sockaddr *)&si_remote, &s_len);
 		if (retcode == -1)
 		{
-			die(3, "Receive failed.");
+			die(4, "Receive failed.");
 		}
 
 		// This is where the real stuff is. Everything in this function
@@ -107,9 +113,7 @@ int main()
 				s_len);
 		if (retcode == -1)
 		{
-			die(4, "Echo back failed.");
+			die(5, "Echo back failed.");
 		}
 	}
-
-	printf("I'm done.\n");
 }
