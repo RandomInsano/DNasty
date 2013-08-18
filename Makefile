@@ -1,7 +1,7 @@
-CC=gcc
+CC=clang
 OBJECTS=main.o utilities.o
 OUTPUT=main
-CFLAGS=-wall -g
+CFLAGS=-Weverything -g
 
 default: $(OUTPUT)
 
