@@ -7,8 +7,45 @@
 #include "utilities.h"
 #include "main.h"
 
-int parse_stuff(char* payload)
+// Returns address in buffer and length of address. Always pass enough space
+// for a v6 address, or I'm going to be very mad at you!
+size_t get_address(const char* hostname, char* address_buffer)
 {
+	// TODO: Fancy data structure for quick caching and lookup
+	// TODO: Load from external file
+	// TODO: Lookup from a more authorative server when not found
+	// TODO: Cache that discovery
+	// TODO: Remove stale cache goodness
+
+	size_t len = 0;
+	struct in_addr address;
+
+	if (strcmp(hostname, "router.enet.local") == 0)
+	{
+		// IPv4 address lookup placeholder
+		len = 4;
+		if (inet_pton(AF_INET, "192.168.239.061", &address) != 1)
+			die(10, "IP conversion failed!");
+	}
+
+	// Oh boy does this feel wrong.
+	memset(address_buffer, 0, IP_MAX_LEN);
+	memcpy(address_buffer, &address, len);
+
+	printf("Debug Infos:\n");
+	printf("  Host: %s\n", hostname);
+	hexdump(address_buffer, IP_MAX_LEN);
+	hexdump(&address, IP_MAX_LEN);
+
+	return len;
+}
+
+size_t parse_stuff(char* payload)
+{
+	char address_buffer[16] = {0};
+	char hostname_buffer[HOSTNAME_MAX_LEN];	// I think this in the RFC
+	unsigned short address_len;
+
 	union msg_array m;
 	memcpy(m.data, payload, sizeof(m.data));
 
@@ -35,33 +72,37 @@ int parse_stuff(char* payload)
 	p = payload;
 	p += sizeof(m.data);             // Skip over main header
 	p += 2;                          // Skip over question start flag
-	p += strlen(p);                  // Skip over its hostname
-	p += 5;                          // Skip over its class and type definitions
+
+	// Copy hostname as safely as can be done
+	strncpy(hostname_buffer, p, HOSTNAME_MAX_LEN);
+	// Lookup the address
+	address_len = (unsigned short)get_address(hostname_buffer, address_buffer);
+
+	p += strnlen(p, HOSTNAME_MAX_LEN); // Skip over its hostname
+	p += 5;                            // Skip over its class and type definitions
 
 	uint32_t ttl = 86400;
 	struct answer answer;
-	answer.name  = DNS_ANSFLAG_COPY; // Use the name from the request
-	answer.type  = htons(A);         // A Record response
-	answer.class = htons(Internet);  // Pretty much the only one going
-	answer.ttl   = htonl(ttl);       // Five minutes
-	answer.rdlen = htons(4);         // Length of IP address
+	answer.name  = DNS_ANSFLAG_COPY;   // Use the name from the request
+	answer.type  = htons(A);           // A Record response
+	answer.class = htons(Internet);    // Pretty much the only one going
+	answer.ttl   = htonl(ttl);         // Five minutes
+	answer.rdlen = htons(address_len); // Length of IP address
 
 	// Copy answer into buffer
 	memcpy(p, &answer, sizeof(answer));
 
 	printf("Size: %u", sizeof(answer));
 
+	// Skip over answer section
 	p += sizeof(answer);
-	p[0] = (char)200;
-	p[1] = (char)236;
-	p[2] = (char)31;
-	p[3] = (char)11;
+	memcpy(p, address_buffer, address_len);
 	p += 4;
 
 	printf("Modified: \n");
 	hexdump(payload, 128);
 
-	return p - payload;
+	return (size_t)(p - payload);
 }
 
 int main()
@@ -71,7 +112,7 @@ int main()
 	char buffer[SOCK_BUFLEN];
 	int s;
 	socklen_t s_len;
-	ssize_t d_len;		// Length of response datas
+	size_t d_len;		// Length of response datas
 	ssize_t retcode;
 	char* interface = "lo";
 	struct sockaddr_in si_local, si_remote;

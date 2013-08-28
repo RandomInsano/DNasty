@@ -20,6 +20,10 @@
 
 #define DNS_ANSFLAG_COPY     0x0CC0
 
+
+#define IP_MAX_LEN			16 /* IPv6 is only 16 bytes so far */
+#define HOSTNAME_MAX_LEN	65 /* Max length of a hostname in an A query */
+
 enum opcode {
 	Reserved0,
 	LLQ,
@@ -110,7 +114,8 @@ struct answer {
 #pragma pack(pop)
 
 // Function definitions
-int parse_stuff(char*);
+size_t parse_stuff(char*);
+size_t get_address(const char*, char*);
 
 
 
