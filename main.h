@@ -110,7 +110,7 @@ struct answer {
 #pragma pack(pop)
 
 // Function definitions
-void parse_stuff(char*);
+int parse_stuff(char*);
 
 
 

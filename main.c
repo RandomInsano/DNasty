@@ -7,7 +7,7 @@
 #include "utilities.h"
 #include "main.h"
 
-void parse_stuff(char* payload)
+int parse_stuff(char* payload)
 {
 	union msg_array m;
 	memcpy(m.data, payload, sizeof(m.data));
@@ -26,7 +26,7 @@ void parse_stuff(char* payload)
 	// *** This is SUPER brittle! ***
 	////////////////////////////////////////////////////
 
-	m.msg.flags |= htons(DNS_MSGFLAG_QR|DNS_MSGFLAG_RD|DNS_MSGFLAG_RA);
+	m.msg.flags |= htons(DNS_MSGFLAG_QR|DNS_MSGFLAG_RD|DNS_MSGFLAG_AA|DNS_MSGFLAG_RA);
 	m.msg.answer_count = htons(1);
 	memcpy(payload, m.data, sizeof(m.data));
 
@@ -34,29 +34,34 @@ void parse_stuff(char* payload)
 	char* p;
 	p = payload;
 	p += sizeof(m.data);             // Skip over main header
-	p += 1;                          // Skip over question start flag
+	p += 2;                          // Skip over question start flag
 	p += strlen(p);                  // Skip over its hostname
-	p += 4;                          // Skip over its class and type definitions
+	p += 5;                          // Skip over its class and type definitions
 
-	uint32_t ttl = 0;
+	uint32_t ttl = 86400;
 	struct answer answer;
+	answer.name  = DNS_ANSFLAG_COPY; // Use the name from the request
 	answer.type  = htons(A);         // A Record response
 	answer.class = htons(Internet);  // Pretty much the only one going
-	answer.rdlen = htons(4);         // Length of IP address
 	answer.ttl   = htonl(ttl);       // Five minutes
-	answer.name  = DNS_ANSFLAG_COPY; // Use the name from the request
+	answer.rdlen = htons(4);         // Length of IP address
 
 	// Copy answer into buffer
 	memcpy(p, &answer, sizeof(answer));
+
+	printf("Size: %u", sizeof(answer));
 
 	p += sizeof(answer);
 	p[0] = (char)200;
 	p[1] = (char)236;
 	p[2] = (char)31;
 	p[3] = (char)11;
+	p += 4;
 
 	printf("Modified: \n");
-	hexdump(payload, 39+5);
+	hexdump(payload, 128);
+
+	return p - payload;
 }
 
 int main()
@@ -66,6 +71,7 @@ int main()
 	char buffer[SOCK_BUFLEN];
 	int s;
 	socklen_t s_len;
+	ssize_t d_len;		// Length of response datas
 	ssize_t retcode;
 	char* interface = "lo";
 	struct sockaddr_in si_local, si_remote;
@@ -106,10 +112,10 @@ int main()
 
 		// This is where the real stuff is. Everything in this function
 		// is just bootstrapping. Stupid C and it's simplicity >:(
-		parse_stuff(buffer);
+		d_len = parse_stuff(buffer);
 
 		// Fix the number of bytes its sending
-		retcode = sendto(s, buffer, 39, 0, (struct sockaddr *)&si_remote,
+		retcode = sendto(s, buffer, d_len, 0, (struct sockaddr *)&si_remote,
 				s_len);
 		if (retcode == -1)
 		{
