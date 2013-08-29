@@ -5,6 +5,12 @@
 #include "main.h"
 #include "resolver.h"
 
+// TODO: I'm going to have to do this differently soon.
+//       Since a single domain name can have many IP addresses, we're going to
+//       need a structure to hold them. Ideally the lookup would just be the
+//       straight text from the query header, but that may not be flexible
+//       enough. Oh well, more thought needed.
+
 // Returns address in buffer and length of address. Always pass enough space
 // for a v6 address, or I'm going to be very mad at you!
 size_t get_address(const char* hostname, char* address_buffer)
@@ -15,20 +21,29 @@ size_t get_address(const char* hostname, char* address_buffer)
 	// TODO: Cache that discovery
 	// TODO: Remove stale cache goodness
 
-	size_t len = 0;
-	struct in_addr address;
+	struct in_addr address4;
+	struct in6_addr address6;
+
+	memset(address_buffer, 0, IP_MAX_LEN);
 
 	if (strcmp(hostname, "router.enet.local.") == 0)
 	{
 		// IPv4 address lookup placeholder
-		len = 4;
-		if (inet_pton(AF_INET, "1.2.3.4", &address) != 1)
-			die(10, "IP conversion failed!");
+		if (inet_pton(AF_INET, "1.2.3.4", &address4) != 1)
+			return 0;
+
+		memcpy(address_buffer, &address4, IPV4_LEN);
+		return IPV4_LEN;
 	}
 
-	// Oh boy does this feel wrong.
-	memset(address_buffer, 0, IP_MAX_LEN);
-	memcpy(address_buffer, &address, len);
+	if (strcmp(hostname, "router6.enet.local.") == 0)
+	{
+		if (inet_pton(AF_INET6, "fe80::1234", &address6) != 1)
+			return 0;
 
-	return len;
+		memcpy(address_buffer, &address6, IPV6_LEN);
+		return IPV6_LEN;
+	}
+
+	return 0;
 }
