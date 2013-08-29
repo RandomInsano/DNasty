@@ -57,14 +57,18 @@ void decompress_domain(const char* input, char* output)
 			break;
 
 		case pointer:
-
+			// I'm not implementing this yet. Since I'm just responding to
+			// queries, and queries shouldn't really use compression, it's not
+			// reall worth it yet.
 			break;
 		}
 
 		pos++;
 	}
 
-	// Add that final stringy null
+	// Add that final stringy null. In theory, we already copied one from
+	// the DNS header (label length header includes the final null), but let's
+	// not trust the data that comes in
 	output[pos] = 0;
 }
 

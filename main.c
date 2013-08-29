@@ -20,11 +20,11 @@ size_t get_address(const char* hostname, char* address_buffer)
 	size_t len = 0;
 	struct in_addr address;
 
-	if (strcmp(hostname, "router.enet.local") == 0)
+	if (strcmp(hostname, "router.enet.local.") == 0)
 	{
 		// IPv4 address lookup placeholder
 		len = 4;
-		if (inet_pton(AF_INET, "192.168.239.061", &address) != 1)
+		if (inet_pton(AF_INET, "1.2.3.4", &address) != 1)
 			die(10, "IP conversion failed!");
 	}
 
@@ -32,18 +32,13 @@ size_t get_address(const char* hostname, char* address_buffer)
 	memset(address_buffer, 0, IP_MAX_LEN);
 	memcpy(address_buffer, &address, len);
 
-	printf("Debug Infos:\n");
-	printf("  Host: %s\n", hostname);
-	hexdump(address_buffer, IP_MAX_LEN);
-	hexdump(&address, IP_MAX_LEN);
-
 	return len;
 }
 
 size_t parse_stuff(char* payload)
 {
 	char address_buffer[16] = {0};
-	char hostname_buffer[HOSTNAME_MAX_LEN];	// I think this in the RFC
+	char hostname_buffer[HOSTNAME_MAX_LEN];
 	unsigned short address_len;
 
 	union msg_array m;
@@ -71,11 +66,10 @@ size_t parse_stuff(char* payload)
 	char* p;
 	p = payload;
 	p += sizeof(m.data);             // Skip over main header
-	p += 2;                          // Skip over question start flag
+	p += 0;                          // Skip over question start flag
 
-	// Copy hostname as safely as can be done
-	strncpy(hostname_buffer, p, HOSTNAME_MAX_LEN);
-	// Lookup the address
+	// Decode the domain name
+	decompress_domain(p, hostname_buffer);
 	address_len = (unsigned short)get_address(hostname_buffer, address_buffer);
 
 	p += strnlen(p, HOSTNAME_MAX_LEN); // Skip over its hostname
@@ -123,7 +117,7 @@ int main()
 		die(1, "Oh god! Socket creation failed!");
 	}
 
-	si_local = (const struct sockaddr_in){0};
+	memset(&si_local, 0, sizeof(struct sockaddr_in));
 	si_local.sin_family = AF_INET;
 	si_local.sin_port = htons(SOCK_PORT);
 
