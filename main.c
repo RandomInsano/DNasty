@@ -18,15 +18,6 @@ size_t parse_stuff(char* payload)
 	union msg_array m;
 	memcpy(m.data, payload, sizeof(m.data));
 
-	printf("Query Infos:\n");
-	printf("- ID:    %u\n", m.msg.id);
-	printf("- Q#:    %u\n", ntohs(m.msg.question_count));
-	printf("- A1#:   %u\n", ntohs(m.msg.answer_count));
-	printf("- A2#:   %u\n", ntohs(m.msg.additional_count));
-
-	hexdump(payload, 128);
-
-
 	////////////////////////////////////////////////////
 	// Modify and make an answer by hand for now...
 	// *** This is SUPER brittle! ***
