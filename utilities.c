@@ -10,7 +10,7 @@ void decompress_domain(const char* input, char* output)
 {
 	unsigned short pos;			// Where we're at with the input
 	unsigned short out;  		// Where we're at with the output
-	unsigned char  lbl_count;	// Where are we in the label?
+	unsigned char  lbl_pos;		// Where are we in the label?
 	enum ddstates  state;		// What are we doing right now?
 
 	const unsigned char mask = 0xC0;	// Control bit mask for label pointer
@@ -19,22 +19,23 @@ void decompress_domain(const char* input, char* output)
 										// two combinations, I don't know yet.
 	pos = 0;
 	out = 0;
-	lbl_count = 0;
+	lbl_pos = 0;
 	state = ctrl;
 
-	// If the value is zero, that's the end of the domain as per the RFC
+	// If an octet is zero, that's the end of the domain as per the RFC
 	while (input[pos])
 	{
-		hexdump(&input[pos], 1);
+		if (pos > HOSTNAME_MAX_LEN)
+			break;
 
 		switch(state)
 		{
 		case readchar:
 			output[out++] = input[pos];
-			lbl_count--;
+			lbl_pos--;
 
-			// If the count is now zero, fall back to reading control codes
-			if (0 == lbl_count)
+			// If there's no more text, fall back to reading control codes
+			if (0 == lbl_pos)
 			{
 				// Add a peroid since text is done
 				output[out++] = '.';
@@ -50,8 +51,7 @@ void decompress_domain(const char* input, char* output)
 			// says how many ASCII characters we need to read.
 			if (0 == (input[pos] & mask))
 			{
-				lbl_count = (unsigned char)input[pos];
-				printf("Number: %u:%x:%x\n", lbl_count, input[pos], mask);
+				lbl_pos = (unsigned char)input[pos];
 				state = readchar;
 			}
 			break;
