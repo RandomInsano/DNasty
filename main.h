@@ -21,8 +21,9 @@
 #define DNS_ANSFLAG_COPY     0x0CC0
 
 
-#define IP_MAX_LEN			16 /* IPv6 is only 16 bytes so far */
-#define HOSTNAME_MAX_LEN	65 /* Max length of a hostname in an A query */
+#define IP_MAX_LEN			16  /* IPv6 is only 16 bytes so far */
+#define LABEL_MAX_LEN		63  /* Max length of a piece of domain name */
+#define HOSTNAME_MAX_LEN	255 /* Max length of a domain name in an A query */
 
 enum opcode {
 	Reserved0,
