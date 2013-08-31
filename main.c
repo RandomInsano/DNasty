@@ -76,7 +76,6 @@ int main()
 	socklen_t s_len;
 	size_t d_len;		// Length of response datas
 	ssize_t retcode;
-	char* interface = "lo";
 	struct sockaddr_in si_local, si_remote;
 
 	s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
