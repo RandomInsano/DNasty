@@ -54,8 +54,6 @@ size_t parse_stuff(char* payload)
 	// Copy answer into buffer
 	memcpy(p, &answer, sizeof(answer));
 
-	printf("Size: %u", sizeof(answer));
-
 	// Skip over answer section
 	p += sizeof(answer);
 	memcpy(p, address_buffer, address_len);
