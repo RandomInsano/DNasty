@@ -1,5 +1,5 @@
 CC=clang
-OBJECTS=main.o utilities.o
+OBJECTS=main.o utilities.o resolver.o
 OUTPUT=main
 CFLAGS=-Weverything -g
 
