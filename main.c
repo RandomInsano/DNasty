@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netinet/in.h> // GCC stuffs.
 
 #include "utilities.h"
 #include "main.h"
@@ -85,12 +86,6 @@ int main()
 	memset(&si_local, 0, sizeof(struct sockaddr_in));
 	si_local.sin_family = AF_INET;
 	si_local.sin_port = htons(SOCK_PORT);
-
-	// Set inteface to bind to
-	if (setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, interface, (socklen_t)strlen(interface)) == -1)
-	{
-		die (2, "Failed to select loopback interface for binding");
-	}
 
 	if (bind(s, (struct sockaddr *)&si_local, sizeof(si_local)) == -1)
 	{
